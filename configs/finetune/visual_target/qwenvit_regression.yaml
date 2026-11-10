@@ -1,0 +1,24 @@
+# LIBERO fine-tuning of configs/pretrain/visual_target/qwenvit_regression.yaml.
+# The generation expert is transferred, so its settings match pre-training exactly.
+_base_: [../libero.yaml]
+
+run_id: finetune_target_qwenvit_regression
+
+framework:
+  gen_model:
+    mode: regression
+    normalize_target: true # regression targets are standardized
+    targets:
+      - target:
+          type: auto
+          resolution: 224
+          pool: none
+        decoder: {type: mlp, num_layers: 3}
+        loss: {type: mse}
+        num_gen_queries: auto
+
+datasets:
+  total_per_device_batch_size: 32
+
+trainer:
+  pretrained_checkpoint: playground/Checkpoints/pretrain_target_qwenvit_regression/checkpoints/steps_20000_pytorch_model.pt

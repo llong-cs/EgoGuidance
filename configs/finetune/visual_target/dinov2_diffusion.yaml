@@ -1,0 +1,24 @@
+# LIBERO fine-tuning of configs/pretrain/visual_target/dinov2_diffusion.yaml.
+# The generation expert is transferred, so its settings match pre-training exactly.
+_base_: [../libero.yaml]
+
+run_id: finetune_target_dinov2_diffusion
+
+framework:
+  gen_model:
+    mode: diffusion
+    normalize_target: false
+    targets:
+      - target:
+          type: dino
+          path: playground/Pretrained_models/dinov2-giant
+        loss:
+          type: flow_matching
+          timestep_schedule: auto
+        num_gen_queries: auto
+
+datasets:
+  total_per_device_batch_size: 32
+
+trainer:
+  pretrained_checkpoint: playground/Checkpoints/pretrain_target_dinov2_diffusion/checkpoints/steps_20000_pytorch_model.pt

@@ -1,0 +1,26 @@
+# LIBERO fine-tuning of configs/pretrain/visual_target/wan_vae_regression.yaml.
+# The generation expert is transferred, so its settings match pre-training exactly.
+_base_: [../libero.yaml]
+
+run_id: finetune_target_wan_vae_regression
+
+framework:
+  gen_model:
+    mode: regression
+    normalize_target: true # regression targets are standardized
+    targets:
+      - target:
+          type: wan_vae
+          path: playground/Pretrained_models/Wan2.2-TI2V-5B-Diffusers
+          vae_subfolder: vae
+          resolution: 256
+          pool: none
+        decoder: {type: mlp, num_layers: 3}
+        loss: {type: mse}
+        num_gen_queries: auto
+
+datasets:
+  total_per_device_batch_size: 32
+
+trainer:
+  pretrained_checkpoint: playground/Checkpoints/pretrain_target_wan_vae_regression/checkpoints/steps_20000_pytorch_model.pt

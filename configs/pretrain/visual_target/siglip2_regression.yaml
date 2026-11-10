@@ -1,0 +1,19 @@
+# Visual-target study: SigLIP2 So400m/16, regression (standardized target, MSE).
+# DROID + Open-AoE co-training; only the generation target / objective changes.
+_base_: [../cotrain_openaoe.yaml]
+
+run_id: pretrain_target_siglip2_regression
+
+framework:
+  gen_model:
+    mode: regression
+    normalize_target: true # regression targets are standardized
+    targets:
+      - target:
+          type: siglip
+          path: playground/Pretrained_models/siglip2-so400m-patch16-256
+          resolution: 256
+          pool: none
+        decoder: {type: mlp, num_layers: 3}
+        loss: {type: mse}
+        num_gen_queries: auto

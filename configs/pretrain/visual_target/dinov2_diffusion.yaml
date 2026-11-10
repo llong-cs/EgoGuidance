@@ -1,0 +1,18 @@
+# Visual-target study: DINOv2 ViT-g/14, flow matching.
+# DROID + Open-AoE co-training; only the generation target / objective changes.
+_base_: [../cotrain_openaoe.yaml]
+
+run_id: pretrain_target_dinov2_diffusion
+
+framework:
+  gen_model:
+    mode: diffusion
+    normalize_target: false
+    targets:
+      - target:
+          type: dino
+          path: playground/Pretrained_models/dinov2-giant
+        loss:
+          type: flow_matching
+          timestep_schedule: auto
+        num_gen_queries: auto

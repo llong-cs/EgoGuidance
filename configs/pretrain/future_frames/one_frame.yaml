@@ -1,0 +1,20 @@
+# Single- vs. multi-frame state prediction: SigLIP2 target, flow matching, one future frame at the end of the action chunk.
+_base_: [../cotrain_openaoe.yaml]
+
+run_id: pretrain_frames_one_frame
+
+framework:
+  gen_model:
+    mode: diffusion
+    num_future_frames: 1
+    normalize_target: false
+    targets:
+      - target:
+          type: siglip
+          path: playground/Pretrained_models/siglip2-so400m-patch16-256
+          resolution: 256
+          pool: none
+        loss:
+          type: flow_matching
+          timestep_schedule: auto
+        num_gen_queries: auto

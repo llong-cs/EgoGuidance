@@ -1,0 +1,185 @@
+# ==============================================================================
+# Pre-training — robot data only (DROID): action + future-state losses
+# ==============================================================================
+# Holds the full SPAR recipe (model, data pipeline, optimizer, schedule) shared by
+# every pre-training configuration; co-training configs inherit it via `_base_`
+# and add an egocentric video stream. This file is also the robot-only baseline
+# (0 h of egocentric video).
+#
+# Hyper-parameters follow the report (App. A): Qwen3.5-2B, action chunk H=8 with
+# d_a=7, one future frame aligned with the end of the action chunk (a_{t+H}: 8 DROID
+# frames at 15 Hz = 0.533 s), SigLIP2 target with flow matching,
+# AdamW (LLM 2.83e-5, experts 2.83e-4, other 1.41e-4), 500 warm-up steps, cosine
+# decay to 2.83e-6, 20k steps, global batch 1,024, gradient clipping 1.0.
+#
+# Global batch: 32 samples/GPU x 32 GPUs = 1,024 samples per optimizer step. On
+# fewer GPUs gradient accumulation is derived so that `trainer.global_batch_size`
+# is met exactly (see `strict_global_batch`).
+#
+# Launch:
+#   bash scripts/train.sh configs/pretrain/robot_only.yaml
+# ==============================================================================
+
+run_id: pretrain_robot_only
+version_id: "0.22"
+train_entry: starVLA/training/train_starvla_gen_cotrain.py
+
+seed: 42
+wandb_project: egoguidance
+wandb_entity: null
+
+framework:
+  name: QwenPI
+  freeze_vlm: false
+  freeze_visual_encoder: true # the vision encoder (incl. its token-merging projector) stays frozen
+
+  qwenvl:
+    base_vlm: playground/Pretrained_models/Qwen3.5-2B
+    attn_implementation: sdpa
+    require_gated_delta_fast_path: true
+    max_pixels: 65536 # native resolution, 256 x 256 pixel budget per image
+    # Width / depth are read from the HF config (2B: D=2048, L=24 layers); both
+    # experts derive their shape from them.
+
+  # Action expert: layer-wise flow matching, block l paired with LLM layer l.
+  action_model:
+    enable: true
+    action_model_type: LayerwiseFM
+    action_dim: 7
+    state_dim: 7
+    action_horizon: 8
+    repeated_diffusion_steps: 2 # two (s, noise) draws per example, VLM features reused
+    num_inference_timesteps: 4 # Euler steps at inference
+    add_pos_embed: true
+    max_seq_len: 1024
+    num_target_vision_tokens: 32 # learnable tokens prepended to the action tokens
+    noise_beta_alpha: 1.5 # s = 1 - u / 0.999, u ~ Beta(1.5, 1)
+    noise_beta_beta: 1.0
+    noise_s: 0.999
+    num_timestep_buckets: 1000
+    diffusion_model_cfg:
+      dropout: 0.2
+      final_dropout: true
+      interleave_self_attention: true
+      norm_type: ada_norm
+      positional_embeddings: null
+      attention_head_dim: 64
+
+  # Generation expert: predicts the frozen-encoder features of one future frame.
+  gen_model:
+    enable: true
+    mode: diffusion # diffusion (flow matching) | regression
+    backbone: expert # a separate expert reading the LLM's layer-wise hidden states
+    isolation: auto # expert backbone -> the action and generation experts never attend to each other
+    frame_mode: parallel
+    # gen_horizon_seconds is left unset: the target is aligned with the end of the
+    # chunk, tau = action_horizon / vla_data.dataset_fps = 8 / 15 s, on every stream.
+    num_future_frames: 1
+    normalize_target: false # diffusion targets are not standardized
+    targets:
+      - target:
+          type: siglip
+          path: playground/Pretrained_models/siglip2-so400m-patch16-256
+          resolution: 256
+          pool: none
+        loss:
+          type: flow_matching
+          timestep_schedule: auto # logit-normal + RAE dimension shift for representation targets
+        num_gen_queries: auto
+
+datasets:
+  total_per_device_batch_size: 32
+
+  # `shared` is copied into every data stream (and always wins over per-stream values).
+  shared:
+    view_prompt_mode: role # each image is preceded by a description of its camera role
+    gen_target_clean: false
+    gen_augment:
+      enabled: false
+      brightness: 0.3
+      contrast: 0.4
+      saturation: 0.5
+      hue: 0.08
+    obs_resize_mode: native
+    obs_image_size: null
+    view_tiling: "off"
+    gen_video_key: central_global # the target is the primary global (third-person / head) view
+
+  # Robot stream: DROID in LeRobot v3 format (`success/` episodes), curated as in the
+  # report by dropping episodes without a valid instruction, without valid action
+  # annotations, or with no motion (from the LeRobot episode metadata).
+  vla_data:
+    dataset_py: gen_lerobot_datasets
+    data_root_dir: playground/Datasets/DROID
+    data_mix: droid_success
+    dataset_fps: 15
+    lerobot_version: v3.0
+    episode_filter:
+      require_instruction: true
+      require_motion: true
+    # 6-D cartesian velocity + 1-D gripper position.
+    modality_json_path: examples/DROID/train_files/data_registry/droid_modality.json
+    include_state: false
+    video_keys: [video.exterior_1, video.wrist]
+    video_backend: pyav
+    tail_policy: drop
+    prevalidate_language: false # instructions are checked from the episode metadata instead
+    losses: [action_loss, gen_loss]
+    sampling_ratio: 1
+    exposure_name: robot
+
+    # Deterministic episode hold-out and a without-replacement transition order.
+    use_official_splits: false
+    split: train
+    val_episode_fraction: 0.05
+    episode_fraction: 1.0
+    seed: 42
+    balance_dataset_weights: true
+    balance_trajectory_weights: true
+    sample_error_policy: raise
+    sampling_strategy: transition_permutation
+    num_workers: 12
+    prefetch_factor: 2
+    persistent_workers: true
+    worker_preprocess_qwen: true # Qwen resize / chat template / tokenization run in the loader workers
+    val_num_workers: 2
+    dataloader_timeout_seconds: 900
+    val_dataloader_timeout_seconds: 900
+
+trainer:
+  max_train_steps: 20000
+  num_warmup_steps: 500
+  save_interval: 4000
+  eval_interval: 200
+  logging_frequency: 20
+  save_total_limit: -1
+  require_exact_resume: false
+  save_full_state: true # also save optimizer / scheduler / data state for resuming
+
+  global_batch_size: 1024
+  strict_global_batch: true
+
+  lr_scheduler_type: cosine_with_min_lr
+  scheduler_specific_kwargs:
+    min_lr: 2.83e-06
+  learning_rate:
+    base: 1.41e-04 # everything not in a group below
+    qwen_vl_interface: 2.83e-05 # LLM
+    action_model: 2.83e-04
+    gen_model: 2.83e-04
+  loss_scale: # lambda_action = lambda_gen = 1
+    action_loss: 1.0
+    gen_loss: 1.0
+
+  freeze_modules: ""
+  max_grad_norm: 1.0
+  gradient_clipping: 1.0
+  gradient_checkpointing: true
+  optimizer:
+    name: AdamW
+    betas: [0.9, 0.95]
+    eps: 1.0e-08
+    weight_decay: 1.0e-08
+
+  val_num_batches: 8
+  cotrain_mode: joint

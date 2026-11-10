@@ -1,0 +1,58 @@
+{
+    "state": {
+        "cartesian_position": {
+            "original_key": "observation.state.cartesian_position",
+            "start": 0,
+            "end": 6,
+            "rotation_type": null,
+            "absolute": true,
+            "dtype": "float32",
+            "range": null
+        },
+        "gripper_position": {
+            "original_key": "observation.state.gripper_position",
+            "start": 0,
+            "end": 1,
+            "rotation_type": null,
+            "absolute": true,
+            "dtype": "float32",
+            "range": null
+        }
+    },
+    "action": {
+        "cartesian_velocity": {
+            "original_key": "action.cartesian_velocity",
+            "start": 0,
+            "end": 6,
+            "rotation_type": null,
+            "absolute": false,
+            "dtype": "float32",
+            "range": null
+        },
+        "gripper_position": {
+            "original_key": "action.gripper_position",
+            "start": 0,
+            "end": 1,
+            "rotation_type": null,
+            "absolute": true,
+            "dtype": "float32",
+            "range": null
+        }
+    },
+    "video": {
+        "exterior_1": {
+            "original_key": "observation.image.exterior_image_1_left"
+        },
+        "exterior_2": {
+            "original_key": "observation.image.exterior_image_2_left"
+        },
+        "wrist": {
+            "original_key": "observation.image.wrist_image_left"
+        }
+    },
+    "annotation": {
+        "task": {
+            "original_key": "task_index"
+        }
+    }
+}

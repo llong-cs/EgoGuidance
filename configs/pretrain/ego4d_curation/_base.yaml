@@ -1,0 +1,23 @@
+# ==============================================================================
+# Ego4D curation study: DROID + Ego4D co-training (shared base, not launched directly)
+# ==============================================================================
+# Same recipe as configs/pretrain/cotrain_openaoe.yaml with Ego4D as the egocentric
+# source. Ego4D videos are cut into uniform, non-overlapping 5 s clips; the
+# curation levels are nested subsets of the same clips:
+#   raw          all clips
+#   gate1        clips passing Gate 1 (stable camera motion, reliable optical flow)
+#   gate1_gate2  clips passing Gate 1 and Gate 2 (at least one visible hand)
+# The step description of each clip (generated from 15 frames) is the instruction.
+# The robot-only baseline is configs/pretrain/robot_only.yaml; compare the
+# checkpoints at 16k and 20k steps after LIBERO fine-tuning (configs/finetune/libero.yaml).
+# ==============================================================================
+
+_base_: [../cotrain_openaoe.yaml]
+
+datasets:
+  video_data:
+    data_root_dir: playground/Datasets/Ego4D/clips
+    text_key: step_description
+    view_description: primary global view from a moving human head camera
+    dataset_fps: 30 # tau = 8 / 15 s -> 16 frames ahead
+    exposure_name: ego4d

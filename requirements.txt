@@ -1,0 +1,33 @@
+# Training / policy-server environment (Python 3.10).
+# Install PyTorch for your CUDA version first (tested: torch 2.6.0 + torchvision 0.21.0, CUDA 12.4):
+#   pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
+# Qwen3.5 gated-delta fast kernels (needed because configs set `require_gated_delta_fast_path: true`):
+#   pip install flash-linear-attention==0.3.2 causal-conv1d==1.5.0.post8
+# The LIBERO simulator client runs in its own environment, see examples/LIBERO/README.md.
+
+# model / training
+transformers==5.3.0
+accelerate==1.5.2
+deepspeed==0.16.9
+omegaconf
+safetensors
+einops
+numpy==1.26.4
+diffusers            # Wan2.2-VAE visual target only
+wandb
+
+# data loading
+pandas
+pyarrow==14.0.1
+pydantic==2.10.6
+numpydantic==1.6.9
+av==12.3.0
+decord==0.6.0
+opencv-python-headless
+albumentations==1.4.18
+pillow
+tqdm
+
+# policy server (deployment/)
+websockets
+msgpack

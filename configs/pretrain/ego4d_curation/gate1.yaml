@@ -1,0 +1,8 @@
+# DROID + Ego4D, clips that pass Gate 1 (motion quality).
+_base_: [_base.yaml]
+
+run_id: pretrain_ego4d_gate1
+
+datasets:
+  video_data:
+    index_jsonl: playground/Datasets/Ego4D/index_gate1.jsonl

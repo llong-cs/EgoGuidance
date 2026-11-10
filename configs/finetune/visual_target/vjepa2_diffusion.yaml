@@ -1,0 +1,25 @@
+# LIBERO fine-tuning of configs/pretrain/visual_target/vjepa2_diffusion.yaml.
+# The generation expert is transferred, so its settings match pre-training exactly.
+_base_: [../libero.yaml]
+
+run_id: finetune_target_vjepa2_diffusion
+
+framework:
+  gen_model:
+    mode: diffusion
+    normalize_target: false
+    targets:
+      - target:
+          type: vjepa
+          path: playground/Pretrained_models/vjepa2-vitg-fpc64-256
+          pool: none
+        loss:
+          type: flow_matching
+          timestep_schedule: auto
+        num_gen_queries: auto
+
+datasets:
+  total_per_device_batch_size: 32
+
+trainer:
+  pretrained_checkpoint: playground/Checkpoints/pretrain_target_vjepa2_diffusion/checkpoints/steps_20000_pytorch_model.pt

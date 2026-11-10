@@ -1,0 +1,25 @@
+# LIBERO fine-tuning of configs/pretrain/visual_target/lingbot_regression.yaml.
+# The generation expert is transferred, so its settings match pre-training exactly.
+_base_: [../libero.yaml]
+
+run_id: finetune_target_lingbot_regression
+
+framework:
+  gen_model:
+    mode: regression
+    normalize_target: true # regression targets are standardized
+    targets:
+      - target:
+          type: lingbot
+          variant: giant
+          path: playground/Pretrained_models/lingbot-vision-vit-giant
+          resolution: 512
+        decoder: {type: mlp, num_layers: 3}
+        loss: {type: mse}
+        num_gen_queries: auto
+
+datasets:
+  total_per_device_batch_size: 16
+
+trainer:
+  pretrained_checkpoint: playground/Checkpoints/pretrain_target_lingbot_regression/checkpoints/steps_20000_pytorch_model.pt

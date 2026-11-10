@@ -1,0 +1,174 @@
+# ==============================================================================
+# Downstream fine-tuning — LIBERO (all four suites, one policy)
+# ==============================================================================
+# Initializes from a pre-training checkpoint and fine-tunes on LIBERO
+# demonstrations with L_robot = L_action + L_gen (same generation target as the
+# default pre-training recipe: one SigLIP2 frame aligned with the end of the action
+# chunk, 8 LIBERO frames at 20 Hz = 0.4 s ahead).
+#
+# `transfer_policy` selects what is loaded from the checkpoint; every other
+# parameter starts from the same seed-42 initialization:
+#   vlm_only  VLM; the action expert is re-initialized (default: re-initializing
+#             the action expert yields a modest improvement)
+#   full      VLM + the pre-trained action expert, trained further
+#             (with `--trainer.transfer_retain_gen_model false`)
+# With `vlm_only` the pre-trained generation expert is kept as well
+# (`transfer_retain_gen_model`), so the generation settings below must match the
+# pre-training config exactly.
+#
+# Launch (point `pretrained_checkpoint` at your pre-training weights):
+#   bash scripts/train.sh configs/finetune/libero.yaml \
+#       --trainer.pretrained_checkpoint playground/Checkpoints/pretrain_cotrain_openaoe/checkpoints/steps_20000_pytorch_model.pt
+# ==============================================================================
+
+run_id: finetune_libero
+version_id: "0.22"
+train_entry: starVLA/training/train_starvla.py
+
+seed: 42
+wandb_project: egoguidance
+wandb_entity: null
+
+framework:
+  name: QwenPI
+  freeze_vlm: false
+  freeze_visual_encoder: true
+
+  qwenvl:
+    base_vlm: playground/Pretrained_models/Qwen3.5-2B # architecture / processor; weights come from the checkpoint
+    attn_implementation: sdpa
+    require_gated_delta_fast_path: true
+    max_pixels: 65536
+
+  action_model:
+    enable: true
+    action_model_type: LayerwiseFM
+    action_dim: 7
+    state_dim: 7
+    action_horizon: 8
+    repeated_diffusion_steps: 2
+    num_inference_timesteps: 4
+    add_pos_embed: true
+    max_seq_len: 1024
+    num_target_vision_tokens: 32
+    noise_beta_alpha: 1.5
+    noise_beta_beta: 1.0
+    noise_s: 0.999
+    num_timestep_buckets: 1000
+    diffusion_model_cfg:
+      dropout: 0.2
+      final_dropout: true
+      interleave_self_attention: true
+      norm_type: ada_norm
+      positional_embeddings: null
+      attention_head_dim: 64
+
+  gen_model:
+    enable: true
+    mode: diffusion
+    backbone: expert
+    isolation: auto
+    frame_mode: parallel
+    # gen_horizon_seconds unset: aligned with a_{t+H}, 8 frames of LIBERO at 20 Hz (0.4 s).
+    num_future_frames: 1
+    normalize_target: false
+    targets:
+      - target:
+          type: siglip
+          path: playground/Pretrained_models/siglip2-so400m-patch16-256
+          resolution: 256
+          pool: none
+        loss:
+          type: flow_matching
+          timestep_schedule: auto
+        num_gen_queries: auto
+
+datasets:
+  total_per_device_batch_size: 32
+
+  shared:
+    view_prompt_mode: role
+    gen_target_clean: false
+    gen_augment:
+      enabled: false
+      brightness: 0.3
+      contrast: 0.4
+      saturation: 0.5
+      hue: 0.08
+    obs_resize_mode: native
+    obs_image_size: null
+    view_tiling: "off"
+    gen_video_key: central_global
+
+  vla_data:
+    dataset_py: gen_lerobot_datasets # actions + the future-frame target
+    data_root_dir: playground/Datasets/LEROBOT_LIBERO_DATA
+    data_mix: libero_all
+    dataset_fps: 20
+    include_state: false
+    video_keys: [video.primary_image, video.wrist_image]
+    video_backend: pyav
+    tail_policy: drop
+    prevalidate_language: false
+    losses: [action_loss, gen_loss]
+
+    use_official_splits: false
+    split: train
+    val_episode_fraction: 0.05
+    episode_fraction: 1.0
+    seed: 42
+    balance_dataset_weights: true
+    balance_trajectory_weights: true
+    sample_error_policy: raise
+    sampling_strategy: transition_permutation
+
+    num_workers: 16
+    prefetch_factor: 2
+    persistent_workers: true
+    worker_preprocess_qwen: true
+    val_num_workers: 2
+    dataloader_timeout_seconds: 900
+    val_dataloader_timeout_seconds: 900
+
+trainer:
+  pretrained_checkpoint: playground/Checkpoints/pretrain_cotrain_openaoe/checkpoints/steps_20000_pytorch_model.pt
+  transfer_policy: vlm_only # vlm_only | full (| action_core)
+  transfer_retain_gen_model: true
+  is_resume: false
+
+  max_train_steps: 20000
+  num_warmup_steps: 500
+  save_interval: 4000
+  eval_interval: 200
+  logging_frequency: 20
+  save_total_limit: -1
+  require_exact_resume: false
+  save_format: pt
+
+  global_batch_size: 2048
+  strict_global_batch: true
+
+  lr_scheduler_type: cosine_with_min_lr
+  scheduler_specific_kwargs:
+    min_lr: 2.83e-06
+  learning_rate:
+    base: 1.41e-04
+    qwen_vl_interface: 2.83e-05
+    action_model: 2.83e-04
+    gen_model: 2.83e-04
+  loss_scale:
+    action_loss: 1.0
+    gen_loss: 1.0
+
+  freeze_modules: ""
+  max_grad_norm: 1.0
+  gradient_clipping: 1.0
+  gradient_checkpointing: true
+  optimizer:
+    name: AdamW
+    betas: [0.9, 0.95]
+    eps: 1.0e-08
+    weight_decay: 1.0e-08
+
+  eval_seed: 42
+  val_num_batches: 8

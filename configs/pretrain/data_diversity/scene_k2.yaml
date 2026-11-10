@@ -1,0 +1,9 @@
+# Data diversity: a fixed budget of 200K Open-AoE clip-description pairs sampled from 2 scene clusters.
+# Every subset has the same size; only its composition differs.
+_base_: [../cotrain_openaoe.yaml]
+
+run_id: pretrain_diversity_scene_k2
+
+datasets:
+  video_data:
+    index_jsonl: playground/Datasets/Open-AoE/diversity/scene_k2.jsonl

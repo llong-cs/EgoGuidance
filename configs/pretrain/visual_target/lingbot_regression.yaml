@@ -1,0 +1,22 @@
+# Visual-target study: LingBot-Vision ViT-g/16, regression (standardized target, MSE).
+# DROID + Open-AoE co-training; only the generation target / objective changes.
+_base_: [../cotrain_openaoe.yaml]
+
+run_id: pretrain_target_lingbot_regression
+
+framework:
+  gen_model:
+    mode: regression
+    normalize_target: true # regression targets are standardized
+    targets:
+      - target:
+          type: lingbot
+          variant: giant
+          path: playground/Pretrained_models/lingbot-vision-vit-giant
+          resolution: 512
+        decoder: {type: mlp, num_layers: 3}
+        loss: {type: mse}
+        num_gen_queries: auto
+
+datasets:
+  total_per_device_batch_size: 16

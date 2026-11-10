@@ -1,0 +1,18 @@
+# Visual-target study: V-JEPA2 ViT-g/16 (the future frame is repeated to fill one tubelet), regression (standardized target, MSE).
+# DROID + Open-AoE co-training; only the generation target / objective changes.
+_base_: [../cotrain_openaoe.yaml]
+
+run_id: pretrain_target_vjepa2_regression
+
+framework:
+  gen_model:
+    mode: regression
+    normalize_target: true # regression targets are standardized
+    targets:
+      - target:
+          type: vjepa
+          path: playground/Pretrained_models/vjepa2-vitg-fpc64-256
+          pool: none
+        decoder: {type: mlp, num_layers: 3}
+        loss: {type: mse}
+        num_gen_queries: auto

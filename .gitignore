@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# Environments
+.venv/
+venv/
+.env
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Weights, datasets and run outputs (see README: `playground/`)
+playground/
+checkpoints/
+results/
+outputs/
+logs/
+wandb/
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+
+# Evaluation artefacts
+*.mp4
+eval_results/

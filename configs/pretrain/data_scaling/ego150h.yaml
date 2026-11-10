@@ -1,0 +1,9 @@
+# Data scaling: DROID + 150 h of Open-AoE (0.075 of its ~2,000 h of clips).
+# 0 h is configs/pretrain/robot_only.yaml.
+_base_: [../cotrain_openaoe.yaml]
+
+run_id: pretrain_scaling_ego150h
+
+datasets:
+  video_data:
+    episode_fraction: 0.075 # deterministic subset of the clips (seeded)

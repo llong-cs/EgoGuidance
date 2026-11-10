@@ -1,0 +1,9 @@
+# Data diversity: a fixed budget of 200K Open-AoE clip-description pairs sampled from the natural Open-AoE distribution.
+# Every subset has the same size; only its composition differs.
+_base_: [../cotrain_openaoe.yaml]
+
+run_id: pretrain_diversity_full_natural
+
+datasets:
+  video_data:
+    index_jsonl: playground/Datasets/Open-AoE/diversity/full_natural.jsonl

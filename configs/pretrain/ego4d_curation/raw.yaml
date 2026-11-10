@@ -1,0 +1,8 @@
+# DROID + Ego4D, all uniform 5 s clips of the raw Ego4D videos.
+_base_: [_base.yaml]
+
+run_id: pretrain_ego4d_raw
+
+datasets:
+  video_data:
+    index_jsonl: playground/Datasets/Ego4D/index_raw.jsonl

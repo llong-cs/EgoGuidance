@@ -1,0 +1,43 @@
+# ==============================================================================
+# Pre-training — SPAR default: DROID + Open-AoE co-training (1:1)
+# ==============================================================================
+# Robot demonstrations supervise both experts (action + generation loss); the
+# action-free egocentric clips supervise only the generation expert. Each step
+# combines a robot and an egocentric mini-batch: the per-GPU batch of 32 is split
+# 1:1 (16 + 16), the two mini-batches are forwarded separately, and their
+# gradients accumulate into one optimizer step (global batch 1,024 = 512 + 512).
+#
+# Egocentric source: the released Open-AoE clips and their step descriptions
+# (no Ego4D-style gates). Each clip is one line of `index.jsonl`; see
+# docs/data.md for the expected layout.
+#
+# Launch:
+#   bash scripts/train.sh configs/pretrain/cotrain_openaoe.yaml
+# ==============================================================================
+
+_base_: [robot_only.yaml]
+
+run_id: pretrain_cotrain_openaoe
+
+datasets:
+  vla_data:
+    num_workers: 6 # two loaders share the CPUs
+
+  video_data:
+    dataset_py: video_datasets
+    index_jsonl: playground/Datasets/Open-AoE/index.jsonl
+    # Video paths in the index may be absolute; relative paths resolve against this root.
+    data_root_dir: playground/Datasets/Open-AoE/videos
+    split: train
+    text_key: step_description # caption used as the language instruction
+    view_description: primary global view from a moving human head camera
+    dataset_fps: 30 # tau = 8 / 15 s -> 16 frames ahead
+    video_backend: decord
+    video_backend_kwargs: {num_threads: 2}
+    persistent_workers: true
+    worker_preprocess_qwen: true
+
+    losses: [gen_loss] # no action labels
+    sampling_ratio: 1
+    exposure_name: ego
+    num_workers: 6

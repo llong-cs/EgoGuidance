@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "egoguidance"
+version = "0.1.0"
+description = "Ego Guidance: enhancing robot policy learning with action-free human egocentric videos (built on StarVLA)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+keywords = ["vision-language-action", "robot learning", "egocentric video", "world model", "flow matching"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["black>=24.2.0", "ruff>=0.4.0", "pytest", "pre-commit"]
+
+[project.urls]
+Homepage = "https://github.com/llong-cs/EgoGuidance"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["starVLA*", "deployment*"]
+
+[tool.black]
+line-length = 121
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 121
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["A", "B", "E", "F", "I", "RUF", "W"]
+ignore = [
+    "F722",   # jaxtyping-style annotations
+    "E501",   # line length is enforced by black
+    "RUF001", # ambiguous unicode characters in strings (e.g. "×")
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401"]
+# GR00T-style data configs declare their modality keys as class attributes.
+"examples/*/train_files/data_registry/data_config.py" = ["RUF012"]
+# Code adapted from GR00T keeps its upstream names (e.g. `min` / `max` arguments).
+"starVLA/dataloader/gr00t_lerobot/**" = ["A001", "A002", "RUF012"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

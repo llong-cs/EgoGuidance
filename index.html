@@ -3,19 +3,181 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>EgoGuidance</title>
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Ego Guidance studies how action-free human egocentric videos can improve robot policy learning through future visual-state prediction.">
+  <title>Ego Guidance — Project Page</title>
   <style>
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, sans-serif; background: #f4f7fb; color: #172033; }
-    main { max-width: 36rem; margin: 1.5rem; padding: 3rem; border-radius: 1rem; background: white; box-shadow: 0 12px 40px #17203318; }
-    h1 { margin-top: 0; }
-    a { color: #2563eb; }
+    :root { color-scheme: light; --ink: #202b34; --muted: #56616a; --blue: #e7f3ff; --green: #d9efc9; --yellow: #ffe9a8; --orange: #e96d50; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: #fff; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; }
+    a:focus-visible, button:focus-visible { outline: 3px solid var(--orange); outline-offset: 4px; }
+    .page { width: min(calc(100% - 48px), 1120px); margin: 0 auto; }
+    .hero { padding: 104px 0 88px; text-align: center; }
+    .eyebrow, .section-label, .figure-label { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .eyebrow { margin: 0 0 18px; color: #428a52; }
+    h1 { margin: 0; font-size: clamp(54px, 8vw, 100px); font-weight: 750; letter-spacing: -.065em; line-height: 1.02; }
+    .subtitle { max-width: 850px; margin: 23px auto 0; font-size: clamp(21px, 2.8vw, 34px); font-weight: 500; letter-spacing: -.035em; line-height: 1.25; }
+    .authors { max-width: 860px; margin: 28px auto 0; color: var(--muted); font-size: 16px; line-height: 1.9; }
+    .authors span { display: inline-block; white-space: nowrap; }
+    .authors span:not(:last-child)::after { content: "·"; padding: 0 .5em; color: #9aa4ab; }
+    .authors sup { color: #b84f37; font-size: .75em; font-weight: 700; }
+    .equal-note { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .links { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+    .links a { display: inline-flex; align-items: center; justify-content: center; min-width: 142px; min-height: 46px; padding: 10px 20px; background: var(--blue); font-weight: 650; text-decoration: none; transition: background-color .2s ease; }
+    .links a:first-child { background: var(--green); }
+    .links a:hover { background: var(--yellow); }
+    .intro { max-width: 900px; margin: 0 auto 126px; text-align: center; font-size: clamp(18px, 2vw, 23px); letter-spacing: -.018em; line-height: 1.5; }
+    .method-copy { max-width: 900px; margin: 0 0 34px; color: var(--muted); font-size: clamp(17px, 2vw, 19px); line-height: 1.65; }
+    section { margin: 0 0 126px; }
+    .section-label { margin: 0 0 14px; color: #478756; }
+    h2 { margin: 0 0 32px; font-size: clamp(28px, 4vw, 43px); letter-spacing: -.045em; line-height: 1.15; }
+    figure { margin: 0; }
+    figure img { display: block; width: 100%; height: auto; }
+    .figure-link { display: block; }
+    figcaption { max-width: 900px; margin: 22px auto 0; color: var(--muted); font-size: 15px; line-height: 1.65; text-align: center; }
+    .figure-label { display: block; margin-bottom: 6px; color: var(--ink); }
+    .insight { max-width: 900px; margin: 32px auto 0; font-size: clamp(17px, 2vw, 20px); line-height: 1.55; text-align: center; }
+    .insight strong { color: #b84f37; font-weight: 700; }
+    .ablation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 34px; align-items: start; }
+    .ablation-grid figcaption { margin-top: 12px; }
+    .real-copy { max-width: 900px; margin: 0; font-size: clamp(18px, 2.2vw, 23px); line-height: 1.55; }
+    .real-copy strong { color: #b84f37; }
+    .citation { max-width: 900px; margin: 0 auto 95px; }
+    .citation h2 { margin-bottom: 22px; }
+    pre { margin: 0; padding: 26px 28px; overflow-wrap: anywhere; white-space: pre-wrap; background: #f0f5f8; color: #233342; font-size: 13px; line-height: 1.65; tab-size: 2; }
+    .copy-row { display: flex; align-items: center; gap: 16px; margin-top: 16px; }
+    button { min-height: 42px; padding: 9px 18px; border: 0; border-radius: 0; background: var(--yellow); color: var(--ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+    button:hover { background: var(--green); }
+    #copy-status { color: var(--muted); font-size: 14px; }
+    footer { padding: 0 0 42px; color: var(--muted); font-size: 13px; text-align: center; }
+    @media (max-width: 680px) {
+      .page { width: min(calc(100% - 32px), 1120px); }
+      .hero { padding: 68px 0 64px; }
+      .subtitle { margin-top: 20px; }
+      .authors { margin-top: 24px; font-size: 14px; }
+      .authors span:not(:last-child)::after { padding: 0 .35em; }
+      .links { margin-top: 28px; }
+      .links a { flex: 1 1 125px; }
+      .intro { margin-bottom: 88px; }
+      section { margin-bottom: 90px; }
+      h2 { margin-bottom: 24px; }
+      figcaption { margin-top: 16px; font-size: 13px; }
+      .ablation-grid { grid-template-columns: 1fr; gap: 36px; }
+      .insight { margin-top: 24px; }
+      .citation { margin-bottom: 70px; }
+      pre { padding: 18px 16px; font-size: 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .links a { transition: none; } }
   </style>
 </head>
 <body>
-  <main>
-    <h1>EgoGuidance</h1>
-    <p>GitHub Pages is working. This is a test page for the EgoGuidance repository.</p>
-    <p><a href="https://github.com/llong-cs/EgoGuidance">View the repository</a></p>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">Action-free video for robot learning</p>
+      <h1>Ego Guidance</h1>
+      <p class="subtitle">Enhancing Robot Policy Learning with Action-Free Human Egocentric Videos</p>
+      <p class="authors" aria-label="Authors"><span>Lin Long<sup>*</sup></span><span>Tianren Ma<sup>*</sup></span><span>Zhong Chu<sup>*</sup></span><span>Di Wu<sup>*</sup></span><span>Maosong Cao</span><span>Qixiang Ye</span><span>Junbo Zhao</span><span>Shanghang Zhang</span></p>
+      <p class="equal-note">* Equal contribution</p>
+      <nav class="links" aria-label="Project links">
+        <a href="https://github.com/llong-cs/EgoGuidance/tree/main">Code ↗</a>
+        <a href="https://arxiv.org/pdf/2611.13685">Paper ↗</a>
+      </nav>
+    </header>
+
+    <p class="intro">Can inexpensive, readily available human egocentric videos benefit embodied tasks without explicit action annotations? We design an architecture to uncover the implicit mutual information between actions and video, and explore its potential for generalization and scaling.</p>
+
+    <section aria-labelledby="method-title">
+      <p class="section-label">01 / Method</p>
+      <h2 id="method-title">One backbone, two experts</h2>
+      <p class="method-copy">We introduce <strong>Shared Prediction on Action and Representation (SPAR)</strong>, a VLM-based Mixture-of-Transformers that uses action prediction and future visual-state prediction as complementary proxy tasks to optimize the shared backbone.</p>
+      <figure>
+        <a class="figure-link" href="assets/ego-guidance-architecture.png" target="_blank" rel="noopener" aria-label="Open the full-size Ego Guidance architecture diagram">
+          <img src="assets/ego-guidance-architecture.png" width="2400" height="802" alt="SPAR architecture diagram: robot demonstrations supervise action and future visual-state prediction; egocentric videos supervise future visual-state prediction through the shared VLM backbone." fetchpriority="high">
+        </a>
+        <figcaption>The generation expert is removed at inference, leaving the deployed policy with the architecture of a standard VLA. Tap the figure to view it at full size.</figcaption>
+      </figure>
+    </section>
+
+    <section aria-labelledby="curation-title">
+      <p class="section-label">02 / Data curation</p>
+      <h2 id="curation-title">The right clips matter</h2>
+      <figure>
+        <a class="figure-link" href="assets/ego4d-curation.png" target="_blank" rel="noopener" aria-label="Open the full-size Ego4D curation figure">
+          <img src="assets/ego4d-curation.png" width="3907" height="1609" alt="Ego4D curation reduces 3,976 raw hours to 1,893 hours after a camera-motion gate and 975 hours after a visible-hand gate; the corresponding plot compares OOD success rates for raw, filtered, and robot-only training." loading="lazy" decoding="async">
+        </a>
+        <figcaption><span class="figure-label">Ego4D curation and corresponding OOD task success rates</span>Hours retained after motion-quality and visible-hand gates, alongside LIBERO-Plus success across training steps.</figcaption>
+      </figure>
+      <p class="insight">Raw Ego4D video trails the robot-only baseline. After both quality gates, the retained <strong>975 hours</strong> produce the strongest OOD result at later training steps.</p>
+    </section>
+
+    <section aria-labelledby="ablation-title">
+      <p class="section-label">03 / Data ablations</p>
+      <h2 id="ablation-title">More video, broader generalization</h2>
+      <div class="ablation-grid">
+        <figure>
+          <a class="figure-link" href="assets/video-scale.png" target="_blank" rel="noopener" aria-label="Open the full-size video scale chart">
+            <img src="assets/video-scale.png" width="1200" height="800" alt="Bar chart comparing in-domain LIBERO and OOD LIBERO-Plus success with 0, 150, 450, and 1,500 hours of egocentric video; OOD success increases with video scale." loading="lazy" decoding="async">
+          </a>
+          <figcaption><span class="figure-label">Video scale</span>0, 150, 450, and 1,500 hours of Open-AoE co-training.</figcaption>
+        </figure>
+        <figure>
+          <a class="figure-link" href="assets/video-diversity.png" target="_blank" rel="noopener" aria-label="Open the full-size video diversity chart">
+            <img src="assets/video-diversity.png" width="1200" height="800" alt="Line chart showing LIBERO-Plus success as scene, object, or interaction diversity varies at a fixed budget of 200,000 video clip-description pairs; no diversity dimension improves consistently." loading="lazy" decoding="async">
+          </a>
+          <figcaption><span class="figure-label">Diversity at a fixed budget</span>Scene, object, and interaction diversity across 200K clip-description pairs.</figcaption>
+        </figure>
+      </div>
+      <p class="insight">OOD success keeps rising across the tested 0–1,500 hours: <strong>the scaling curve shows no sign of saturation yet</strong>. At a fixed 200K-pair budget, increasing any one diversity measure gives no consistent gain. Expanding the amount and coverage of action-free video remains a promising direction.</p>
+    </section>
+
+    <section aria-labelledby="real-title">
+      <p class="section-label">04 / Real-world results</p>
+      <h2 id="real-title">Nearly matching π<sub>0.5</sub> on physical robots</h2>
+      <p class="real-copy">Across five bimanual manipulation tasks, SPAR succeeds in <strong>20/50 trials (40%)</strong>, close to <strong>22/50 (44%)</strong> for π<sub>0.5</sub>.</p>
+    </section>
+
+    <section class="citation" aria-labelledby="citation-title">
+      <p class="section-label">05 / Citation</p>
+      <h2 id="citation-title">Cite this work</h2>
+      <pre id="bibtex"><code>@article{long2026egoguidance,
+  title={Ego Guidance: Enhancing Robot Policy Learning with Action-Free Human Egocentric Videos},
+  author={Long, Lin and Ma, Tianren and Chu, Zhong and Wu, Di and Cao, Maosong and Ye, Qixiang and Zhao, Junbo and Zhang, Shanghang},
+  journal={arXiv preprint arXiv:2611.13685},
+  year={2026},
+  eprint={2611.13685},
+  archivePrefix={arXiv},
+  url={https://arxiv.org/abs/2611.13685}
+}</code></pre>
+      <div class="copy-row"><button id="copy-bibtex" type="button">Copy BibTeX</button><span id="copy-status" role="status" aria-live="polite"></span></div>
+    </section>
   </main>
+  <footer>Ego Guidance · 2026</footer>
+  <script>
+    const copyButton = document.getElementById('copy-bibtex');
+    const copyStatus = document.getElementById('copy-status');
+    const bibtex = document.getElementById('bibtex').textContent.trim();
+    copyButton.addEventListener('click', async () => {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(bibtex);
+        } else {
+          const field = document.createElement('textarea');
+          field.value = bibtex;
+          field.style.position = 'fixed';
+          field.style.opacity = '0';
+          document.body.appendChild(field);
+          field.select();
+          const copied = document.execCommand('copy');
+          field.remove();
+          if (!copied) throw new Error('Copy failed');
+        }
+        copyStatus.textContent = 'Copied to clipboard';
+      } catch {
+        copyStatus.textContent = 'Select the citation above to copy it';
+      }
+    });
+  </script>
 </body>
 </html>
